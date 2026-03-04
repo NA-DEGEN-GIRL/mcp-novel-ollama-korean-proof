@@ -205,6 +205,23 @@ def _format_suggestions(suggestions) -> str:
     return str(suggestions)
 
 
+def _save_report(report: str, file_path: str, novel_id: str | None) -> str:
+    """보고서를 소설 폴더 내 reviews/에 저장하고 경로를 반환한다."""
+    if not novel_id:
+        return ""
+    novel_dir = os.path.join(NOVEL_ROOT, novel_id)
+    reviews_dir = os.path.join(novel_dir, "reviews")
+    os.makedirs(reviews_dir, exist_ok=True)
+
+    # 파일명: chapter-01.md → chapter-01-proofread.md
+    basename = Path(file_path).stem  # chapter-01
+    out_name = f"{basename}-proofread.md"
+    out_path = os.path.join(reviews_dir, out_name)
+
+    Path(out_path).write_text(report, encoding="utf-8")
+    return out_path
+
+
 def _format_report(items: list[dict], file_path: str, model: str) -> str:
     """검출 목록을 마크다운 보고서로 변환한다."""
     errors = [x for x in items if x.get("severity") == "error"]
@@ -316,8 +333,11 @@ def proofread(file_path: str, model: str = "", timeout: int = 300) -> str:
             f"모델을 변경하거나 프롬프트를 조정해 보세요."
         )
 
-    # 보고서 생성
+    # 보고서 생성 및 저장
     report = _format_report(items, file_path, model)
+    saved_path = _save_report(report, file_path, novel_id)
+    if saved_path:
+        report += f"\n\n---\n저장됨: `{saved_path}`"
     return report
 
 
