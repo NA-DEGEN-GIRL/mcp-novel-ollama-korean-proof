@@ -119,11 +119,12 @@ def _get_context(novel_id: str) -> tuple[str, str]:
 
 
 def _run_ollama(prompt: str, model: str, timeout: int = 300) -> str:
-    """Ollama를 실행하고 출력을 반환한다."""
-    cmd = [OLLAMA_PATH, "run", model, "--hidethinking", prompt]
+    """Ollama를 실행하고 출력을 반환한다. 프롬프트는 stdin으로 전달."""
+    cmd = [OLLAMA_PATH, "run", model, "--hidethinking"]
     try:
         result = subprocess.run(
             cmd,
+            input=prompt,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -419,6 +420,7 @@ def list_models() -> str:
     try:
         result = subprocess.run(
             [OLLAMA_PATH, "list"],
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             timeout=10,
